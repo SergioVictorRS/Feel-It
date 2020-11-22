@@ -1,0 +1,30 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-title>
+      Detecção de Sons a partir do Giro
+    </ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <ion-header collapse="condense">
+    <ion-toolbar>
+      <ion-title size="large">Gire a Página para gerar notas e gravar sons</ion-title>
+    </ion-toolbar>
+  </ion-header>
+
+  <ion-row>
+    <ion-toolbar>
+      Nota Escolhida:
+      <ion-title size="large">{{actualNote}}</ion-title>
+    </ion-toolbar>
+    <ion-toolbar *ngIf = "actualOctave !== 'blank'">
+      Oitava Escolhida
+      <ion-title size="large">{{actualOctave}}</ion-title>
+    </ion-toolbar>
+  </ion-row>
+</ion-content>
+
+<ion-footer>
+  <ion-button color = "primary" expand = "full" size = "large" (click) = "stop()">Parar e Tocar!</ion-button>
+</ion-footer>
