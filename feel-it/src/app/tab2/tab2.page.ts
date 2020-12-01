@@ -16,13 +16,20 @@ export class Tab2Page implements OnInit, OnChanges, OnDestroy {
   synth = new Tone.Synth().toDestination();
 
   choosedNotesAndOctaves = [];
-  actualNote = 'Gire o Celular para Escolher uma nota';
+  actualNote = '';
+
   actualOctave = '';
   acelerometerSubscription: Subscription;
+
   isFirst = true;
   isSecond = true;
-  octaves = ['2n', '4n', '6n', '8n'];
+  isSharp = false;
+
+  octaves = ['2n', '3n', '5n', '8n'];
   frequences = [2.5, 5, 7.5, 10];
+  actualFrequence = 4;
+
+  timeBeetwenNotes = 1500;
 
   notes = [
     { pt: 'DÓ', en: 'C', maxRange: 1.43 },
@@ -40,23 +47,30 @@ export class Tab2Page implements OnInit, OnChanges, OnDestroy {
   ) {}
 
   ngOnDestroy(): void {
-    this.acelerometerSubscription.unsubscribe();
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    this.TouchSong();
   }
 
   ngOnInit(): void {
+  }
+
+  updateAccelerationTime(){
+    this.acelerometerSubscription.unsubscribe();
     this.TouchSong();
+  }
+
+  getTimeBetweenNotesInSeconds(): string {
+    const seconds = this.timeBeetwenNotes / 1000;
+    return seconds + 's';
   }
 
   storeNote(x: number , y: number): void{
     const note = this.getNote(x);
-    const frequence = 4;
     this.actualOctave = this.getOctave(x, y);
-    this.actualNote = note.pt;
-    const actualNoteEn = note.en + frequence;
+    this.actualNote = this.isSharp ? (note.pt + '#') : note.pt;
+    const actualNoteEn = this.isSharp ?
+    (note.en + '#' + this.actualFrequence) : (note.en + this.actualFrequence);
     this.choosedNotesAndOctaves.push({note: actualNoteEn, octave: this.actualOctave});
     this.synth.triggerAttackRelease(actualNoteEn, this.actualOctave);
   }
@@ -67,6 +81,7 @@ export class Tab2Page implements OnInit, OnChanges, OnDestroy {
 
   private getNote(x: number): any {
     x = x < 0 ? x * -1 : x ;
+    x = x > 10 ? (x % 10) : x;
     const index = this.notes.findIndex(note => note.maxRange >= x);
     return this.notes[index];
   }
@@ -83,8 +98,8 @@ export class Tab2Page implements OnInit, OnChanges, OnDestroy {
     }
   }
 
-  private TouchSong() {
-    // Get the device current acceleration
+    // Get the device current acceleration and Store Notes
+    public TouchSong() {
     this.deviceMotion.getCurrentAcceleration().then(
       (ac: DeviceMotionAccelerationData) => {
         if (this.isFirst) {
@@ -98,12 +113,23 @@ export class Tab2Page implements OnInit, OnChanges, OnDestroy {
 
     // Watch device acceleration
     this.acelerometerSubscription = this.deviceMotion
-      .watchAcceleration({frequency: 5000})
+      .watchAcceleration({frequency: this.timeBeetwenNotes})
       .subscribe((ac: DeviceMotionAccelerationData) => {
         this.storeNote(ac.x, ac.y);
       });
   }
 
+  // Activate Sharp
+  activateSharp() {
+    this.isSharp = true;
+  }
+
+  // Unactivate Sharp
+  unactiveSharp(){
+    this.isSharp = false;
+  }
+
+  // Stop Note and Touch Song
   stop(): void {
     const now = Tone.now();
     this.acelerometerSubscription.unsubscribe();
